@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🧧 春节倒计时 · 农历新年</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+    <title>🐎 2026 春节倒计时 · 丙午马年</title>
     <style>
         * {
             margin: 0;
@@ -14,118 +14,92 @@
 
         body {
             min-height: 100vh;
-            background: linear-gradient(145deg, #9f1f1f 0%, #6d0f0f 100%);
+            background: radial-gradient(circle at 30% 20%, #ac2f2f, #6f1111);
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 1.5rem;
+            padding: 16px;
             position: relative;
             overflow-x: hidden;
         }
 
-        /* 装饰灯笼 (简化版) */
-        .lantern-left, .lantern-right {
+        /* 装饰纹理：金色洒金效果 */
+        body::before {
+            content: '';
             position: absolute;
-            width: 110px;
-            height: 160px;
-            background: radial-gradient(circle at 30% 30%, #fbd26a, #d43f3f);
-            border-radius: 50% / 30% 30% 20% 20%;
-            top: 30px;
-            box-shadow: 0 15px 25px rgba(0,0,0,0.5);
-            z-index: 2;
-        }
-        .lantern-left {
-            left: 20px;
-            transform: rotate(-5deg);
-        }
-        .lantern-right {
-            right: 20px;
-            transform: rotate(5deg);
-        }
-        .lantern-left::before, .lantern-right::before {
-            content: "";
-            position: absolute;
-            width: 24px;
-            height: 40px;
-            background: #f7d44a;
-            top: -25px;
-            left: 50%;
-            transform: translateX(-50%);
-            border-radius: 6px 6px 0 0;
-            box-shadow: inset 0 -2px 5px #b35e1a;
-        }
-        .lantern-left::after, .lantern-right::after {
-            content: "福";
-            position: absolute;
-            color: #fef7d6;
-            font-size: 2.8rem;
-            font-weight: bold;
-            font-family: "KaiTi", "楷体", serif;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-shadow: 2px 2px 3px #b33636;
+            inset: 0;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" opacity="0.1"><path d="M20 20 Q30 10 40 20 T60 20 T80 20" stroke="%23ffcc66" fill="none" stroke-width="1.5"/><circle cx="70" cy="70" r="3" fill="%23ffaa33"/><circle cx="15" cy="85" r="4" fill="%23ffaa33"/><circle cx="88" cy="18" r="2" fill="%23ffaa33"/></svg>');
+            background-repeat: repeat;
+            pointer-events: none;
+            z-index: 0;
         }
 
-        /* 磨砂主卡片 */
+        /* 主卡片 —— 仿红纸洒金 */
         .card {
-            background: rgba(255, 245, 225, 0.1);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 2px solid rgba(255, 215, 0, 0.4);
-            border-radius: 68px 20px 68px 20px;
-            box-shadow: 0 35px 68px rgba(0, 0, 0, 0.6), 0 0 0 2px #f1b42b inset;
-            padding: 2.8rem 3rem;
-            max-width: 900px;
-            width: 100%;
-            text-align: center;
-            color: #ffecb3;
-            transition: all 0.3s;
+            position: relative;
             z-index: 10;
+            max-width: 780px;
+            width: 100%;
+            background: #fffef7;        /* 牙色底，像传统宣纸 */
+            background-image: linear-gradient(145deg, #fffdf0 0%, #fff5e6 100%);
+            border-radius: 48px 48px 48px 48px;
+            box-shadow: 0 30px 50px rgba(80, 0, 0, 0.6), 0 0 0 2px #e4bf7e inset, 0 0 0 5px #b54708 inset;
+            padding: 2.5rem 2rem;
+            text-align: center;
+            transition: all 0.2s;
+            border: 6px solid #cf7f3a;
         }
 
-        h1 {
-            font-size: 3.8rem;
-            font-weight: 700;
+        /* 装饰挂笺效果 (简化) */
+        .card::after {
+            content: '🐉 福 🐉';
+            position: absolute;
+            bottom: 20px;
+            right: 30px;
+            font-size: 2.2rem;
+            opacity: 0.1;
+            color: #b33e3e;
+            font-weight: bold;
+            transform: rotate(-5deg);
+            pointer-events: none;
+            font-family: 'KaiTi', '楷体', serif;
+        }
+
+        /* 标题区 */
+        .title {
+            color: #972020;
+            font-size: clamp(2rem, 8vw, 3.5rem);
+            font-weight: 800;
             letter-spacing: 6px;
-            text-shadow: 0 5px 0 #972828, 0 10px 12px black;
-            margin-bottom: 0.25rem;
-            color: #fff3c9;
-            font-family: "华文楷体", "KaiTi", cursive;
+            text-shadow: 2px 2px 0 #f9d77e, 4px 4px 0 rgba(180, 60, 20, 0.3);
+            margin-bottom: 6px;
+            text-transform: uppercase;
         }
 
-        .subhead {
-            font-size: 1.6rem;
-            margin-bottom: 2rem;
-            border-bottom: 2px dashed #ffc857;
-            padding-bottom: 0.8rem;
+        .sub-title {
+            font-size: clamp(1.2rem, 4vw, 1.8rem);
+            color: #b14b2c;
+            background: linear-gradient(90deg, #f0cf96, #f7e2b5);
             display: inline-block;
-            color: #ffe9aa;
-            font-weight: 300;
-            letter-spacing: 2px;
-        }
-
-        .festival-name {
-            font-size: 2.6rem;
+            padding: 0.4rem 2rem;
+            border-radius: 60px;
+            margin: 10px 0 8px;
             font-weight: 600;
-            background: linear-gradient(135deg, #ffdf8c, #ffb347);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            margin: 0.5rem 0 0.2rem;
-            text-shadow: 0 0 8px #ff4800;
+            box-shadow: 0 4px 8px #b2582e33;
+            border: 1px solid #ffd57a;
         }
 
         .gregorian-date {
-            font-size: 1.5rem;
-            background: rgba(0,0,0,0.3);
-            display: inline-block;
-            padding: 0.4rem 1.8rem;
+            font-size: 1.3rem;
+            color: #773d1c;
+            background: #fceedb;
+            padding: 0.3rem 1.8rem;
             border-radius: 40px;
-            backdrop-filter: blur(4px);
-            border: 1px solid #ffb347;
-            margin-bottom: 2rem;
-            color: #ffdb9d;
+            display: inline-block;
+            margin: 10px 0 20px;
+            border: 1px dashed #c75e2b;
+            font-weight: 500;
+            letter-spacing: 1px;
         }
 
         /* 倒计时面板 */
@@ -133,257 +107,262 @@
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
-            gap: 1.2rem;
-            margin: 2rem 0 1rem;
+            gap: 20px 25px;
+            margin: 35px 0 25px;
         }
 
         .time-block {
-            background: rgba(10, 5, 0, 0.6);
-            backdrop-filter: blur(6px);
-            border-radius: 30px;
-            padding: 1.2rem 0.8rem;
+            background: #9f2d2d;        /* 深红底 */
+            background: linear-gradient(145deg, #b33b3b, #831e1e);
+            border-radius: 32px;
+            padding: 20px 12px 16px;
             min-width: 120px;
-            box-shadow: 0 10px 15px -5px #3e1a1a, 0 0 0 2px #e9b13b inset;
-            border: 1px solid #ffda7c;
+            flex: 1 1 0;
+            box-shadow: 0 12px 0 #521212, 0 8px 15px #3d0f0f;
+            border: 2px solid #fec169;
+            transition: transform 0.1s ease;
+        }
+
+        .time-block:hover {
+            transform: translateY(-4px);
         }
 
         .time-number {
-            font-size: 4.5rem;
-            font-weight: 800;
+            font-size: clamp(3.2rem, 8vw, 4.8rem);
+            font-weight: 900;
+            color: #ffdfa7;
+            text-shadow: 0 3px 0 #aa4c1e, 0 6px 0 #542a0f;
             line-height: 1;
-            color: #ffd966;
-            text-shadow: 0 0 12px #ff9f00, 0 4px 4px #5f2b2b;
+            margin-bottom: 6px;
+            font-feature-settings: "tnum";
+            letter-spacing: 4px;
         }
 
         .time-label {
+            font-size: 1.3rem;
+            color: #ffefc0;
+            background: #ac3f2a;
+            display: inline-block;
+            padding: 5px 18px;
+            border-radius: 40px;
+            font-weight: 600;
+            border: 1px solid #fcc56e;
+            box-shadow: inset 0 -2px 0 #64200e;
+        }
+
+        /* 祝福语区域 / 动态状态 */
+        .greeting-box {
+            background: #ea9e48;
+            background: linear-gradient(135deg, #f6b44a, #e8872b);
+            border-radius: 50px;
+            padding: 18px 18px;
+            margin: 30px 0 10px;
+            border: 3px solid #fde7b4;
+            box-shadow: 0 6px 0 #a14415;
+        }
+
+        .greeting-text {
+            font-size: 1.9rem;
+            font-weight: 700;
+            color: #2f0f00;
+            text-shadow: 1px 1px 0 #ffcb7a;
+            letter-spacing: 3px;
+        }
+
+        .sub-greeting {
             font-size: 1.2rem;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            color: #ffe3a5;
-            border-top: 1px dashed #dba959;
-            padding-top: 0.5rem;
-            margin-top: 0.3rem;
+            color: #582b0b;
+            margin-top: 6px;
+            font-style: italic;
         }
 
-        .greeting-message {
-            font-size: 3rem;
-            font-weight: bold;
-            color: #ffd966;
-            background: rgba(129, 24, 24, 0.5);
-            border-radius: 60px;
-            padding: 1.5rem 2rem;
-            margin: 2rem 0;
-            border: 3px solid gold;
-            text-shadow: 3px 3px 0 #a53232;
-            display: none;  /* 默认隐藏，由JS控制 */
-            backdrop-filter: blur(5px);
-        }
-
+        /* 脚注 */
         .footer-note {
-            margin-top: 2.5rem;
-            font-size: 1.2rem;
-            color: #ffd7a5;
-            opacity: 0.9;
-            border-top: 1px solid #f1b151;
-            padding-top: 1.5rem;
+            margin-top: 30px;
+            color: #b1572c;
+            font-size: 1rem;
+            border-top: 2px dotted #e5a45b;
+            padding-top: 18px;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
         }
 
-        /* 移动端适配 */
-        @media (max-width: 700px) {
-            .card { padding: 2rem 1rem; }
-            h1 { font-size: 2.6rem; }
-            .time-number { font-size: 3rem; }
-            .time-block { min-width: 75px; padding: 0.8rem 0.2rem; }
-            .lantern-left, .lantern-right { width: 70px; height: 110px; top: 15px; }
-            .lantern-left::after, .lantern-right::after { font-size: 2rem; }
+        .footer-note span {
+            background: #ffefd2;
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-weight: 500;
+            border: 1px solid #d48b47;
         }
 
-        @media (max-width: 450px) {
-            .countdown-panel { gap: 0.6rem; }
-            .time-block { min-width: 60px; }
-            .time-number { font-size: 2.2rem; }
-            .festival-name { font-size: 1.9rem; }
+        /* 移动端微调 */
+        @media (max-width: 500px) {
+            .card {
+                padding: 1.8rem 1rem;
+                border-radius: 32px;
+            }
+            .time-block {
+                min-width: 70px;
+                padding: 15px 5px 10px;
+            }
+            .time-number {
+                font-size: 2.8rem;
+            }
+            .time-label {
+                font-size: 1rem;
+                padding: 4px 8px;
+            }
+            .greeting-text {
+                font-size: 1.6rem;
+            }
+        }
+
+        /* 数字等宽 */
+        .mono {
+            font-family: 'Courier New', 'JetBrains Mono', monospace;
         }
     </style>
 </head>
 <body>
-    <!-- 装饰灯笼（纯气氛） -->
-    <div class="lantern-left"></div>
-    <div class="lantern-right"></div>
-
     <div class="card">
-        <h1>🐉 春节倒计时</h1>
-        <div class="subhead">农历新年 · 阖家团圆</div>
+        <h1 class="title">🐎 丙午新春 🐎</h1>
+        <div class="sub-title">2026 · 春节倒计时</div>
+        <div class="gregorian-date">
+            <span>🏮 2月17日 星期二 🏮</span>
+        </div>
 
-        <!-- 动态内容区域 -->
-        <div id="festivalName" class="festival-name">丙午年（马年）</div>
-        <div id="gregorianDisplay" class="gregorian-date">2026年2月17日</div>
-
-        <!-- 倒计时块 (正常显示) -->
-        <div id="countdownNormal" class="countdown-panel">
+        <!-- 倒计时数字块 -->
+        <div class="countdown-panel">
             <div class="time-block">
-                <div id="days" class="time-number">00</div>
+                <div class="time-number mono" id="days">00</div>
                 <div class="time-label">天</div>
             </div>
             <div class="time-block">
-                <div id="hours" class="time-number">00</div>
+                <div class="time-number mono" id="hours">00</div>
                 <div class="time-label">时</div>
             </div>
             <div class="time-block">
-                <div id="minutes" class="time-number">00</div>
+                <div class="time-number mono" id="minutes">00</div>
                 <div class="time-label">分</div>
             </div>
             <div class="time-block">
-                <div id="seconds" class="time-number">00</div>
+                <div class="time-number mono" id="seconds">00</div>
                 <div class="time-label">秒</div>
             </div>
         </div>
 
-        <!-- 春节当天显示的祝福 (隐藏) -->
-        <div id="greetingBlock" class="greeting-message">
-            🎉 新春大吉！万事如意 🎉
+        <!-- 动态提示语 (会根据是否过期变化) -->
+        <div class="greeting-box" id="greetingBox">
+            <div class="greeting-text" id="mainGreeting">🧧 距离春节还有</div>
+            <div class="sub-greeting" id="subGreeting">迎马年 · 纳福运</div>
         </div>
 
+        <!-- 底部农历/时间说明 -->
         <div class="footer-note">
-            ⏱️ 精准到秒 · 共盼团圆
+            <span>📅 农历丙午年 正月初一</span>
+            <span>⏱️ 北京时间 / 东八区</span>
         </div>
     </div>
 
     <script>
         (function() {
-            // ---------- 春节数据 (北京时间 00:00 +08:00) ----------
-            const FESTIVALS = [
-                { full: "2025-01-29T00:00:00+08:00", name: "乙巳年（蛇年）" },
-                { full: "2026-02-17T00:00:00+08:00", name: "丙午年（马年）" },
-                { full: "2027-02-06T00:00:00+08:00", name: "丁未年（羊年）" },
-                { full: "2028-01-26T00:00:00+08:00", name: "戊申年（猴年）" },
-                { full: "2029-02-13T00:00:00+08:00", name: "己酉年（鸡年）" },
-                { full: "2030-02-03T00:00:00+08:00", name: "庚戌年（狗年）" },
-                { full: "2031-02-22T00:00:00+08:00", name: "辛亥年（猪年）" },
-                { full: "2032-02-11T00:00:00+08:00", name: "壬子年（鼠年）" },
-                { full: "2033-01-31T00:00:00+08:00", name: "癸丑年（牛年）" },
-                { full: "2034-02-19T00:00:00+08:00", name: "甲寅年（虎年）" },
-                { full: "2035-02-08T00:00:00+08:00", name: "乙卯年（兔年）" },
-                { full: "2036-01-28T00:00:00+08:00", name: "丙辰年（龙年）" }
-            ];  // 已覆盖至2036年，足够使用
+            // ---------- 设定目标：2026年春节（北京时间 2026-02-17 00:00:00）----------
+            const TARGET_DATE = new Date("2026-02-17T00:00:00+08:00");  // 直接指定东八区
 
-            // 获取指定时间的北京时间日期字符串 (格式 yyyy-mm-dd)
-            function getBeijingDateStr(dateObj) {
-                // 使用 Intl 格式化北京时间年月日
-                const formatter = new Intl.DateTimeFormat('zh-CN', {
-                    timeZone: 'Asia/Shanghai',
-                    year: 'numeric',
-                    month: '2-digit',
-                    day: '2-digit'
-                });
-                // 返回类似 "2026/02/17" 格式，统一替换为 "-"
-                return formatter.format(dateObj).replace(/\//g, '-');
-            }
+            // 获取DOM元素
+            const daysEl = document.getElementById('days');
+            const hoursEl = document.getElementById('hours');
+            const minutesEl = document.getElementById('minutes');
+            const secondsEl = document.getElementById('seconds');
+            const mainGreeting = document.getElementById('mainGreeting');
+            const subGreeting = document.getElementById('subGreeting');
+            const greetingBox = document.getElementById('greetingBox');
 
-            // 核心：获取当前应该关注的春节 (今天过节的优先，否则返回下一个未来春节)
-            function getTargetFestival(now) {
-                const nowBeijing = getBeijingDateStr(now);
+            // 定时器ID
+            let timer = null;
 
-                // 1. 先看今天是否有春节 (按北京日期)
-                for (let f of FESTIVALS) {
-                    // 从full字符串提取日期部分 (yyyy-mm-dd)
-                    const festDate = f.full.slice(0, 10);   // "2026-02-17"
-                    if (festDate === nowBeijing) {
-                        return { type: 'today', festival: f };   // 今天就是春节
-                    }
-                }
-
-                // 2. 否则找下一个未来的春节 (比较时间戳)
-                const nowTime = now.getTime();
-                for (let f of FESTIVALS) {
-                    const festTime = new Date(f.full).getTime();   // 北京时间0点对应的UTC毫秒
-                    if (festTime > nowTime) {
-                        return { type: 'future', festival: f };
-                    }
-                }
-
-                // 3. 所有春节都过了 (超出2036年)
-                return { type: 'none', festival: null };
-            }
-
-            // 补零函数
+            // 辅助函数：补零至两位
             function pad(num) {
-                return num < 10 ? '0' + num : num;
+                return String(num).padStart(2, '0');
             }
 
-            // 更新页面上的所有内容
-            function refreshCountdown() {
-                const now = new Date();
-                const target = getTargetFestival(now);
-
-                // 获取显示组件
-                const festivalNameEl = document.getElementById('festivalName');
-                const gregorianEl = document.getElementById('gregorianDisplay');
-                const normalDiv = document.getElementById('countdownNormal');
-                const greetingDiv = document.getElementById('greetingBlock');
-                const daysEl = document.getElementById('days');
-                const hoursEl = document.getElementById('hours');
-                const minutesEl = document.getElementById('minutes');
-                const secondsEl = document.getElementById('seconds');
-
-                // 处理无数据情况 (所有春节已过)
-                if (target.type === 'none' || !target.festival) {
-                    festivalNameEl.textContent = '新春待更新';
-                    gregorianEl.textContent = '敬请期待';
-                    normalDiv.style.display = 'none';
-                    greetingDiv.style.display = 'block';
-                    greetingDiv.textContent = '🧧 更多春节即将到来 🧧';
-                    return;
+            // 核心更新函数：计算剩余时间，更新UI，返回是否继续（true=未过期）
+            function updateCountdown() {
+                const now = new Date();                      // 当前UTC时间（自动转换）
+                const diffMs = TARGET_DATE - now;            // 毫秒差（基于UTC时间戳，精确）
+                
+                // 情况1：已经到达或超过春节 (diff <= 0)
+                if (diffMs <= 0) {
+                    // 停止任何正在运行的定时器
+                    if (timer) {
+                        clearInterval(timer);
+                        timer = null;
+                    }
+                    // 显示归零（也可以显示 00 00 00 00）
+                    daysEl.textContent = '00';
+                    hoursEl.textContent = '00';
+                    minutesEl.textContent = '00';
+                    secondsEl.textContent = '00';
+                    
+                    // 改变祝福语为“新年快乐”
+                    mainGreeting.textContent = '🎉 丙午马年 · 新春快乐 🎉';
+                    subGreeting.textContent = '万事顺遂 · 平安喜乐';
+                    // 稍微美化背景色，保留节日气氛
+                    greetingBox.style.background = 'linear-gradient(135deg, #fad676, #f7b731)';
+                    return false;   // 已过期，不再继续
                 }
 
-                const fest = target.festival;
-                // 设置公历显示 (从full里取日期部分)
-                const festDateStr = fest.full.slice(0, 10).replace(/-/g, '年').replace(/-/g, '月') + '日';
-                gregorianEl.textContent = festDateStr;     // 显示 "2026年02月17日"
-                festivalNameEl.textContent = fest.name;
-
-                // 如果今天是春节，展示祝福，隐藏倒计时
-                if (target.type === 'today') {
-                    normalDiv.style.display = 'none';
-                    greetingDiv.style.display = 'block';
-                    greetingDiv.textContent = '🎊 新春快乐 · 岁岁平安 🎊';
-                    return;
-                }
-
-                // 未来春节：展示倒计时，隐藏祝福
-                normalDiv.style.display = 'flex';
-                greetingDiv.style.display = 'none';
-
-                // 计算剩余时间 (基于北京时间0点)
-                const targetTime = new Date(fest.full).getTime();   // UTC时间戳，对应北京时间0点
-                const nowTime = now.getTime();
-                let diffMs = targetTime - nowTime;
-
-                // 极端情况：如果因为秒级误差导致负数，但type已经是future，理论上diffMs > 0
-                // 但以防万一，如果小于0，归0处理 (不会显示负)
-                if (diffMs < 0) diffMs = 0;
-
-                // 转换为天、时、分、秒
+                // 情况2：尚未过年 —— 计算天、时、分、秒
                 const totalSeconds = Math.floor(diffMs / 1000);
                 const days = Math.floor(totalSeconds / 86400);
-                const hours = Math.floor((totalSeconds % 86400) / 3600);
-                const minutes = Math.floor((totalSeconds % 3600) / 60);
-                const seconds = totalSeconds % 60;
+                const remainingAfterDays = totalSeconds % 86400;
+                const hours = Math.floor(remainingAfterDays / 3600);
+                const remainingAfterHours = remainingAfterDays % 3600;
+                const minutes = Math.floor(remainingAfterHours / 60);
+                const seconds = remainingAfterHours % 60;
 
-                // 更新DOM
+                // 更新显示 (补零)
                 daysEl.textContent = pad(days);
                 hoursEl.textContent = pad(hours);
                 minutesEl.textContent = pad(minutes);
                 secondsEl.textContent = pad(seconds);
+
+                // 保证祝福语为“距离春节还有” (万一之前被修改过)
+                mainGreeting.textContent = '🧧 距离春节还有';
+                subGreeting.textContent = '迎马年 · 纳福运';
+                greetingBox.style.background = 'linear-gradient(135deg, #f6b44a, #e8872b)'; // 恢复默认
+                
+                return true;    // 未过期，继续
             }
 
-            // 立即执行一次
-            refreshCountdown();
+            // ---------- 初始化 ----------
+            // 先执行一次确保界面正确
+            const stillActive = updateCountdown();
 
-            // 每秒更新
-            setInterval(refreshCountdown, 1000);
+            // 如果还未过年，启动每秒定时器；否则已经停止（update里已清timer）
+            if (stillActive) {
+                // 先确保没有之前的定时器（防御）
+                if (timer) clearInterval(timer);
+                timer = setInterval(updateCountdown, 1000);
+            }
+
+            // 可选：当页面隐藏时，浏览器可能会降低定时器精度，但无伤大雅
+            // 为了完美，在页面卸载时清除定时器（好习惯）
+            window.addEventListener('beforeunload', function() {
+                if (timer) {
+                    clearInterval(timer);
+                    timer = null;
+                }
+            });
+
+            // 处理极端情况：如果用户设备时间被修改，导致倒计时偏差，刷新即可。
+            // 但每次更新都是实时计算，所以基本没问题。
         })();
     </script>
-    <!-- 注：春节日期数据基于天文推算，覆盖2025-2036年，可平滑过渡 -->
+
+    <!-- 简要说明：本倒计时基于北京时间 (东八区) 2026年2月17日 00:00:00 -->
+    <!-- 使用纯HTML/CSS/JS，无外部依赖，适配移动端/桌面 -->
 </body>
 </html>
