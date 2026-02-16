@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
     <title>🐎 2026春节 · 烟花迎新年 🎆</title>
     <style>
-        /* ----- 倒计时卡片样式 (保持不变) ----- */
+        /* ----- 原有样式保持不变，仅添加最后一条文案内部图片的样式 ----- */
         * {
             margin: 0;
             padding: 0;
@@ -229,10 +229,461 @@
             pointer-events: none;
         }
 
-        /* 每一条文案的样式 (绝对定位叠加) */
+        /* 每一条文案的公共样式 (绝对定位叠加) */
         .message-item {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
-      
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+            color: #FFD966;
+            font-size: clamp(2rem, 10vw, 5rem);  /* 根据需要调整文字大小 */
+            font-weight: 900;
+            text-shadow: 0 0 20px #ffaa33, 0 0 40px #ff5500;
+            font-family: 'KaiTi', '楷体', '华文楷体', serif;
+            letter-spacing: 6px;
+            transform: scale(0.9);
+            animation: glowPulse 2s infinite alternate;
+            pointer-events: none;
+        }
+
+        /* 最后一条文案内部的图片样式 */
+        .last-item img {
+            width: 1.5em;          /* 图片宽度相对于文字大小 */
+            height: 1.5em;
+            margin-left: 0.3em;     /* 与文字的间距 */
+            vertical-align: middle;
+            display: inline-block;
+            filter: drop-shadow(0 0 5px #ffaa33); /* 可选：加一点光晕 */
+        }
+
+        .message-item.active {
+            opacity: 1;
+        }
+
+        @keyframes glowPulse {
+            from { text-shadow: 0 0 20px #ff9900, 0 0 40px #ff3300; }
+            to { text-shadow: 0 0 30px #ffcc66, 0 0 70px #ff6633; }
+        }
+
+        .sound-tip {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 300;
+            color: rgba(255,255,200,0.8);
+            background: rgba(0,0,0,0.6);
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-size: 1.2rem;
+            border: 1px solid #ffb347;
+            backdrop-filter: blur(4px);
+            pointer-events: none;
+            transition: opacity 0.5s;
+            opacity: 0;
+        }
+
+        .sound-tip.show {
+            opacity: 1;
+        }
+
+        .mono {
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <!-- 倒计时卡片 -->
+    <div class="card" id="countdownCard">
+        <h1 class="title">🐎 丙午新春 🐎</h1>
+        <div class="sub-title">2026 · 春节倒计时</div>
+        <div class="gregorian-date"><span>🏮 2月17日 星期二 🏮</span></div>
+
+        <div class="countdown-panel">
+            <div class="time-block"><div class="time-number mono" id="days">00</div><div class="time-label">天</div></div>
+            <div class="time-block"><div class="time-number mono" id="hours">00</div><div class="time-label">时</div></div>
+            <div class="time-block"><div class="time-number mono" id="minutes">00</div><div class="time-label">分</div></div>
+            <div class="time-block"><div class="time-number mono" id="seconds">00</div><div class="time-label">秒</div></div>
+        </div>
+
+        <div class="greeting-box" id="greetingBox">
+            <div class="greeting-text" id="mainGreeting">🧧 距离春节还有</div>
+            <div class="sub-greeting" id="subGreeting">迎马年 · 纳福运</div>
+        </div>
+
+        <div class="footer-note">
+            <span>📅 农历丙午年 正月初一</span>
+            <span>⏱️ 北京时间 / 东八区</span>
+        </div>
+    </div>
+
+    <!-- 烟花覆盖层 -->
+    <div class="fireworks-overlay" id="fireworksOverlay">
+        <canvas id="fireworksCanvas"></canvas>
+        <!-- 文案容器 (将动态生成 message-item) -->
+        <div class="new-year-text" id="newYearText"></div>
+        <div class="sound-tip" id="soundTip">🔊 点击画面 开启音效</div>
+    </div>
+
+    <script>
+        (function() {
+            // ---------- 手动配置区域 ----------
+            // 多段祝福文案（可增删改）- 顺序播放至最后一条后停止
+            const newYearMessages = [
+                "新年快乐！",
+                "你作为ysy的朋友",
+                "收到了ysy的第一个新年祝福",
+                "希望",
+                "接下来一年里",
+                "我们依然是朋友！"
+            ];
+            // 文案切换间隔（毫秒）
+            const messageSwitchInterval = 3000; // 3秒
+            // 最后一条文案后面跟随的图片 URL（可替换为您自己的图片）
+            const lastMessageImageUrl = "https://ts3.tc.mm.bing.net/th/id/OIP-C.yV59KAD3qTWiRrzrp-1E5gHaEt?rs=1&pid=ImgDetMain&o=7&rm=3"; // 示例：烟花表情图标
+            // 倒计时目标：2026年春节（北京时间）
+            // const TARGET_DATE = new Date(); // 测试用：当前时间+5秒
+            // TARGET_DATE.setSeconds(TARGET_DATE.getSeconds() + 5);
+            // 正式使用时请注释上面两行，取消下面一行的注释：
+            const TARGET_DATE = new Date("2026-02-17T00:00:00+08:00");
+            // ---------- 配置结束 ----------
+
+            // DOM 元素
+            const daysEl = document.getElementById('days');
+            const hoursEl = document.getElementById('hours');
+            const minutesEl = document.getElementById('minutes');
+            const secondsEl = document.getElementById('seconds');
+            const mainGreeting = document.getElementById('mainGreeting');
+            const subGreeting = document.getElementById('subGreeting');
+            const countdownCard = document.getElementById('countdownCard');
+            const overlay = document.getElementById('fireworksOverlay');
+            const newYearContainer = document.getElementById('newYearText');
+            const soundTip = document.getElementById('soundTip');
+
+            // 状态变量
+            let timer = null;
+            let fireworksTriggered = false;
+            let carouselStarted = false;
+            let carouselTimer = null;
+            let textTimer = null;
+
+            // 辅助函数：补零
+            function pad(num) {
+                return String(num).padStart(2, '0');
+            }
+
+            // 倒计时更新
+            function updateCountdown() {
+                const now = new Date();
+                const diffMs = TARGET_DATE - now;
+
+                if (diffMs <= 0) {
+                    if (timer) {
+                        clearInterval(timer);
+                        timer = null;
+                    }
+                    daysEl.textContent = '00';
+                    hoursEl.textContent = '00';
+                    minutesEl.textContent = '00';
+                    secondsEl.textContent = '00';
+                    mainGreeting.textContent = '🎉 丙午马年 · 新春快乐 🎉';
+                    subGreeting.textContent = '万事顺遂 · 平安喜乐';
+                    
+                    if (!fireworksTriggered) {
+                        fireworksTriggered = true;
+                        startFireworksTransition();
+                    }
+                    return false;
+                }
+
+                const totalSeconds = Math.floor(diffMs / 1000);
+                const days = Math.floor(totalSeconds / 86400);
+                const remaining = totalSeconds % 86400;
+                const hours = Math.floor(remaining / 3600);
+                const minutes = Math.floor((remaining % 3600) / 60);
+                const seconds = remaining % 60;
+
+                daysEl.textContent = pad(days);
+                hoursEl.textContent = pad(hours);
+                minutesEl.textContent = pad(minutes);
+                secondsEl.textContent = pad(seconds);
+                mainGreeting.textContent = '🧧 距离春节还有';
+                subGreeting.textContent = '迎马年 · 纳福运';
+                return true;
+            }
+
+            // ---------- 多文案轮播（顺序播放，停在最后一条，最后一条带图片）----------
+            function startMessageCarousel() {
+                if (carouselStarted) return;
+                carouselStarted = true;
+
+                // 清空容器
+                newYearContainer.innerHTML = '';
+
+                const messages = (Array.isArray(newYearMessages) && newYearMessages.length > 0) 
+                                 ? newYearMessages 
+                                 : ['新年快乐'];
+                const interval = (typeof messageSwitchInterval === 'number' && messageSwitchInterval >= 200) 
+                                 ? messageSwitchInterval 
+                                 : 3000;
+
+                // 为每条文案创建一个 message-item
+                messages.forEach((msg, index) => {
+                    const isLast = (index === messages.length - 1); // 判断是否为最后一条
+                    const item = document.createElement('div');
+                    item.className = 'message-item' + (isLast ? ' last-item' : ''); // 最后一条添加 last-item 类
+
+                    if (isLast && lastMessageImageUrl) {
+                        // 最后一条文案：包含文字 span 和图片
+                        const textSpan = document.createElement('span');
+                        textSpan.textContent = msg;
+                        item.appendChild(textSpan);
+
+                        const img = document.createElement('img');
+                        img.src = lastMessageImageUrl;
+                        img.alt = '🎆';
+                        img.style.width = '2.4em';
+                        img.style.height = '1.5em';
+                        img.style.marginLeft = '0.3em';
+                        item.appendChild(img);
+                    } else {
+                        // 其他文案：纯文本
+                        item.textContent = msg;
+                    }
+
+                    newYearContainer.appendChild(item);
+                });
+
+                const items = document.querySelectorAll('.message-item');
+                if (items.length === 0) return;
+
+                let currentIndex = 0;
+                items[currentIndex].classList.add('active');
+
+                // 如果只有一条，直接显示，无需轮播
+                if (items.length === 1) return;
+
+                // 顺序轮播，到最后一条后停止
+                carouselTimer = setInterval(() => {
+                    items[currentIndex].classList.remove('active');
+                    currentIndex++;
+                    if (currentIndex < items.length) {
+                        items[currentIndex].classList.add('active');
+                    } else {
+                        clearInterval(carouselTimer);
+                        carouselTimer = null;
+                    }
+                }, interval);
+            }
+
+            // ---------- 烟花系统 (不变) ----------
+            let canvas = document.getElementById('fireworksCanvas');
+            let ctx = canvas.getContext('2d');
+            let animFrame = null;
+            let particles = [];
+            let risingFireworks = [];
+
+            let audioCtx = null;
+            let audioUnlocked = false;
+            let pendingExplosionSound = false;
+
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resizeCanvas);
+
+            function initAudio() {
+                if (audioUnlocked) return true;
+                try {
+                    if (!audioCtx) {
+                        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    }
+                    if (audioCtx.state === 'suspended') {
+                        audioCtx.resume().then(() => {
+                            audioUnlocked = true;
+                            soundTip.classList.remove('show');
+                            if (pendingExplosionSound) {
+                                playExplosionSound();
+                                pendingExplosionSound = false;
+                            }
+                        }).catch(e => console.warn('音频解锁失败', e));
+                    } else {
+                        audioUnlocked = true;
+                        soundTip.classList.remove('show');
+                    }
+                } catch (e) {
+                    console.warn('Web Audio API 不支持', e);
+                }
+                return audioUnlocked;
+            }
+
+            function playExplosionSound() {
+                if (!audioCtx || audioCtx.state !== 'running') {
+                    pendingExplosionSound = true;
+                    if (!audioUnlocked) soundTip.classList.add('show');
+                    return;
+                }
+                try {
+                    const duration = 0.4;
+                    const sampleRate = audioCtx.sampleRate;
+                    const buffer = audioCtx.createBuffer(1, sampleRate * duration, sampleRate);
+                    const channel = buffer.getChannelData(0);
+                    for (let i = 0; i < buffer.length; i++) {
+                        channel[i] = Math.random() * 2 - 1;
+                    }
+                    const gainNode = audioCtx.createGain();
+                    gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                    
+                    const source = audioCtx.createBufferSource();
+                    source.buffer = buffer;
+                    source.connect(gainNode);
+                    gainNode.connect(audioCtx.destination);
+                    source.start();
+                } catch (e) {
+                    console.warn('播放爆炸声失败', e);
+                }
+            }
+
+            function createExplosion(centerX, centerY) {
+                const count = 80;
+                for (let i = 0; i < count; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = 2 + Math.random() * 5;
+                    const vx = Math.cos(angle) * speed;
+                    const vy = Math.sin(angle) * speed - 1.5;
+                    const color = `hsl(${Math.random() * 60 + 20}, 100%, 65%)`;
+                    particles.push({
+                        x: centerX, y: centerY, vx, vy,
+                        size: 4 + Math.random() * 6,
+                        alpha: 1.0, color, life: 1.0,
+                        decay: 0.01 + Math.random() * 0.02
+                    });
+                }
+                playExplosionSound();
+
+                if (!carouselStarted) {
+                    if (textTimer) clearTimeout(textTimer);
+                    textTimer = setTimeout(() => {
+                        startMessageCarousel();
+                    }, 800);
+                }
+            }
+
+            function launchFirework() {
+                const startX = 100 + Math.random() * (canvas.width - 200);
+                const startY = canvas.height - 30;
+                const targetY = canvas.height * 0.2 + Math.random() * canvas.height * 0.4;
+                risingFireworks.push({
+                    x: startX, y: startY,
+                    vy: -6 - Math.random() * 4,
+                    targetY, exploded: false
+                });
+            }
+
+            function updateFireworks() {
+                if (!ctx) return;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                for (let i = risingFireworks.length - 1; i >= 0; i--) {
+                    const f = risingFireworks[i];
+                    if (f.exploded) {
+                        risingFireworks.splice(i, 1);
+                        continue;
+                    }
+                    f.y += f.vy;
+                    if (f.y <= f.targetY || f.y < 50) {
+                        createExplosion(f.x, f.y);
+                        f.exploded = true;
+                    } else {
+                        ctx.beginPath();
+                        ctx.arc(f.x, f.y, 8, 0, Math.PI * 2);
+                        ctx.fillStyle = '#FFE55C';
+                        ctx.shadowColor = '#FFA500';
+                        ctx.shadowBlur = 15;
+                        ctx.fill();
+                    }
+                }
+
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    const p = particles[i];
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vy += 0.1;
+                    p.alpha -= p.decay;
+                    p.life -= p.decay;
+
+                    if (p.alpha <= 0.02 || p.y > canvas.height + 50) {
+                        particles.splice(i, 1);
+                        continue;
+                    }
+
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+                    ctx.fillStyle = p.color;
+                    ctx.globalAlpha = p.alpha;
+                    ctx.shadowColor = '#FFB347';
+                    ctx.shadowBlur = 10;
+                    ctx.fill();
+                }
+
+                ctx.globalAlpha = 1.0;
+                ctx.shadowBlur = 0;
+                animFrame = requestAnimationFrame(updateFireworks);
+            }
+
+            function startFireworksTransition() {
+                countdownCard.classList.add('fade-out');
+                overlay.classList.add('show');
+                resizeCanvas();
+                if (animFrame) cancelAnimationFrame(animFrame);
+                animFrame = requestAnimationFrame(updateFireworks);
+
+                setTimeout(() => {
+                    launchFirework();
+                }, 400);
+
+                if (!audioUnlocked) {
+                    soundTip.classList.add('show');
+                }
+
+                canvas.addEventListener('click', function canvasClickHandler() {
+                    if (!audioUnlocked) {
+                        initAudio();
+                    }
+                    launchFirework();
+                });
+            }
+
+            // 启动倒计时
+            const stillActive = updateCountdown();
+            if (stillActive) {
+                if (timer) clearInterval(timer);
+                timer = setInterval(updateCountdown, 1000);
+            }
+
+            // 如果加载时已经超过目标时间（例如测试），直接触发烟花
+            if (new Date() >= TARGET_DATE && !fireworksTriggered) {
+                fireworksTriggered = true;
+                startFireworksTransition();
+            }
+
+            window.addEventListener('beforeunload', function() {
+                if (timer) clearInterval(timer);
+                if (animFrame) cancelAnimationFrame(animFrame);
+                if (carouselTimer) clearInterval(carouselTimer);
+                if (textTimer) clearTimeout(textTimer);
+            });
+        })();
+    </script>
+</body>
+</html>
