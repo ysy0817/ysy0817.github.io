@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
     <title>🐎 2026春节 · 烟花迎新年 🎆</title>
     <style>
-        /* ----- 原有样式保持不变，仅添加最后一条文案内部图片的样式 ----- */
+        /* ----- 原有样式保持不变 ----- */
         * {
             margin: 0;
             padding: 0;
@@ -242,7 +242,7 @@
             opacity: 0;
             transition: opacity 1s ease-in-out;
             color: #FFD966;
-            font-size: clamp(2rem, 10vw, 5rem);  /* 根据需要调整文字大小 */
+            font-size: clamp(2rem, 10vw, 5rem);
             font-weight: 900;
             text-shadow: 0 0 20px #ffaa33, 0 0 40px #ff5500;
             font-family: 'KaiTi', '楷体', '华文楷体', serif;
@@ -254,12 +254,12 @@
 
         /* 最后一条文案内部的图片样式 */
         .last-item img {
-            width: 1.5em;          /* 图片宽度相对于文字大小 */
+            width: 1.5em;
             height: 1.5em;
-            margin-left: 0.3em;     /* 与文字的间距 */
+            margin-left: 0.3em;
             vertical-align: middle;
             display: inline-block;
-            filter: drop-shadow(0 0 5px #ffaa33); /* 可选：加一点光晕 */
+            filter: drop-shadow(0 0 5px #ffaa33);
         }
 
         .message-item.active {
@@ -296,9 +296,93 @@
         .mono {
             font-family: 'Courier New', monospace;
         }
+
+        /* ----- 新增密码验证层样式 ----- */
+        .password-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            transition: opacity 0.3s ease;
+        }
+
+        .password-overlay.hidden {
+            display: none;
+        }
+
+        .password-box {
+            background: #fff;
+            padding: 2rem;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .password-box h2 {
+            margin-bottom: 1.5rem;
+            color: #b33b3b;
+            font-size: 1.8rem;
+        }
+
+        .password-box input {
+            width: 100%;
+            padding: 0.8rem;
+            font-size: 1.2rem;
+            border: 2px solid #f0cf96;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            text-align: center;
+            letter-spacing: 2px;
+            outline: none;
+        }
+
+        .password-box input:focus {
+            border-color: #b33b3b;
+        }
+
+        .password-box button {
+            background: #b33b3b;
+            color: white;
+            border: none;
+            padding: 0.8rem 2rem;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border: 1px solid #fec169;
+        }
+
+        .password-box button:hover {
+            background: #8f2a2a;
+        }
+
+        .error-message {
+            color: red;
+            margin-top: 1rem;
+            min-height: 1.5rem;
+        }
     </style>
 </head>
 <body>
+    <!-- 密码验证遮罩 -->
+    <div id="passwordOverlay" class="password-overlay">
+        <div class="password-box">
+            <h2>🔒 请输入访问密码</h2>
+            <input type="password" id="passwordInput" placeholder="数字密码" inputmode="numeric" pattern="\d*">
+            <button id="submitPassword">进入</button>
+            <p id="passwordError" class="error-message"></p>
+        </div>
+    </div>
+
     <!-- 倒计时卡片 -->
     <div class="card" id="countdownCard">
         <h1 class="title">🐎 丙午新春 🐎</h1>
@@ -332,9 +416,55 @@
     </div>
 
     <script>
+        // ========== 数字密码验证 ==========
+        (function() {
+            const CORRECT_PASSWORD = "41";  // 可修改为任意数字密码
+            const overlay = document.getElementById('passwordOverlay');
+            const passwordInput = document.getElementById('passwordInput');
+            const submitBtn = document.getElementById('submitPassword');
+            const errorEl = document.getElementById('passwordError');
+
+            // 检查是否已通过验证（使用sessionStorage，关闭标签页后失效）
+            if (sessionStorage.getItem('pageUnlocked') === 'true') {
+                overlay.classList.add('hidden');
+                return;  // 已通过，无需绑定事件
+            }
+
+            // 验证函数
+            function checkPassword() {
+                const entered = passwordInput.value.trim();
+                if (entered === CORRECT_PASSWORD) {
+                    // 密码正确，隐藏遮罩并记住状态
+                    overlay.classList.add('hidden');
+                    sessionStorage.setItem('pageUnlocked', 'true');
+                    errorEl.textContent = '';
+                } else {
+                    errorEl.textContent = '密码错误，请重新输入';
+                    passwordInput.value = '';
+                    passwordInput.focus();
+                }
+            }
+
+            // 绑定事件
+            submitBtn.addEventListener('click', checkPassword);
+            passwordInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    checkPassword();
+                }
+            });
+
+            // 限制只能输入数字
+            passwordInput.addEventListener('input', function() {
+                this.value = this.value.replace(/[^0-9]/g, '');
+            });
+        })();
+    </script>
+
+    <script>
+        // ========== 原有倒计时和烟花代码（完全不变） ==========
         (function() {
             // ---------- 手动配置区域 ----------
-            // 多段祝福文案（可增删改）- 顺序播放至最后一条后停止
             const newYearMessages = [
                 "新年快乐！",
                 "你作为ysy的朋友",
@@ -343,18 +473,11 @@
                 "接下来一年里",
                 "我们依然是朋友！"
             ];
-            // 文案切换间隔（毫秒）
-            const messageSwitchInterval = 3000; // 3秒
-            // 最后一条文案后面跟随的图片 URL（可替换为您自己的图片）
-            const lastMessageImageUrl = "https://ts3.tc.mm.bing.net/th/id/OIP-C.yV59KAD3qTWiRrzrp-1E5gHaEt?rs=1&pid=ImgDetMain&o=7&rm=3"; // 示例：烟花表情图标
-            // 倒计时目标：2026年春节（北京时间）
-            // const TARGET_DATE = new Date(); // 测试用：当前时间+5秒
-            // TARGET_DATE.setSeconds(TARGET_DATE.getSeconds() + 5);
-            // 正式使用时请注释上面两行，取消下面一行的注释：
+            const messageSwitchInterval = 3000;
+            const lastMessageImageUrl = "https://ts3.tc.mm.bing.net/th/id/OIP-C.yV59KAD3qTWiRrzrp-1E5gHaEt?rs=1&pid=ImgDetMain&o=7&rm=3";
             const TARGET_DATE = new Date("2026-02-17T00:00:00+08:00");
             // ---------- 配置结束 ----------
 
-            // DOM 元素
             const daysEl = document.getElementById('days');
             const hoursEl = document.getElementById('hours');
             const minutesEl = document.getElementById('minutes');
@@ -366,19 +489,16 @@
             const newYearContainer = document.getElementById('newYearText');
             const soundTip = document.getElementById('soundTip');
 
-            // 状态变量
             let timer = null;
             let fireworksTriggered = false;
             let carouselStarted = false;
             let carouselTimer = null;
             let textTimer = null;
 
-            // 辅助函数：补零
             function pad(num) {
                 return String(num).padStart(2, '0');
             }
 
-            // 倒计时更新
             function updateCountdown() {
                 const now = new Date();
                 const diffMs = TARGET_DATE - now;
@@ -418,12 +538,9 @@
                 return true;
             }
 
-            // ---------- 多文案轮播（顺序播放，停在最后一条，最后一条带图片）----------
             function startMessageCarousel() {
                 if (carouselStarted) return;
                 carouselStarted = true;
-
-                // 清空容器
                 newYearContainer.innerHTML = '';
 
                 const messages = (Array.isArray(newYearMessages) && newYearMessages.length > 0) 
@@ -433,14 +550,12 @@
                                  ? messageSwitchInterval 
                                  : 3000;
 
-                // 为每条文案创建一个 message-item
                 messages.forEach((msg, index) => {
-                    const isLast = (index === messages.length - 1); // 判断是否为最后一条
+                    const isLast = (index === messages.length - 1);
                     const item = document.createElement('div');
-                    item.className = 'message-item' + (isLast ? ' last-item' : ''); // 最后一条添加 last-item 类
+                    item.className = 'message-item' + (isLast ? ' last-item' : '');
 
                     if (isLast && lastMessageImageUrl) {
-                        // 最后一条文案：包含文字 span 和图片
                         const textSpan = document.createElement('span');
                         textSpan.textContent = msg;
                         item.appendChild(textSpan);
@@ -453,7 +568,6 @@
                         img.style.marginLeft = '0.3em';
                         item.appendChild(img);
                     } else {
-                        // 其他文案：纯文本
                         item.textContent = msg;
                     }
 
@@ -466,10 +580,8 @@
                 let currentIndex = 0;
                 items[currentIndex].classList.add('active');
 
-                // 如果只有一条，直接显示，无需轮播
                 if (items.length === 1) return;
 
-                // 顺序轮播，到最后一条后停止
                 carouselTimer = setInterval(() => {
                     items[currentIndex].classList.remove('active');
                     currentIndex++;
@@ -482,7 +594,7 @@
                 }, interval);
             }
 
-            // ---------- 烟花系统 (不变) ----------
+            // ---------- 烟花系统 ----------
             let canvas = document.getElementById('fireworksCanvas');
             let ctx = canvas.getContext('2d');
             let animFrame = null;
@@ -664,14 +776,12 @@
                 });
             }
 
-            // 启动倒计时
             const stillActive = updateCountdown();
             if (stillActive) {
                 if (timer) clearInterval(timer);
                 timer = setInterval(updateCountdown, 1000);
             }
 
-            // 如果加载时已经超过目标时间（例如测试），直接触发烟花
             if (new Date() >= TARGET_DATE && !fireworksTriggered) {
                 fireworksTriggered = true;
                 startFireworksTransition();
