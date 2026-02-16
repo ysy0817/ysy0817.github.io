@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
-    <title>🐎 2026 春节倒计时 · 丙午马年</title>
+    <title>🐎 2026春节 · 烟花迎新年 🎆</title>
     <style>
+        /* ----- 原有倒计时样式 (稍作调整，添加淡出过渡) ----- */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', 'WenQuanYi Micro Hei', sans-serif;
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
         }
 
         body {
@@ -23,7 +24,6 @@
             overflow-x: hidden;
         }
 
-        /* 装饰纹理：金色洒金效果 */
         body::before {
             content: '';
             position: absolute;
@@ -34,23 +34,28 @@
             z-index: 0;
         }
 
-        /* 主卡片 —— 仿红纸洒金 */
+        /* 主卡片 —— 倒计时卡片，添加淡出过渡 */
         .card {
             position: relative;
             z-index: 10;
             max-width: 780px;
             width: 100%;
-            background: #fffef7;        /* 牙色底，像传统宣纸 */
+            background: #fffef7;
             background-image: linear-gradient(145deg, #fffdf0 0%, #fff5e6 100%);
             border-radius: 48px 48px 48px 48px;
             box-shadow: 0 30px 50px rgba(80, 0, 0, 0.6), 0 0 0 2px #e4bf7e inset, 0 0 0 5px #b54708 inset;
             padding: 2.5rem 2rem;
             text-align: center;
-            transition: all 0.2s;
+            transition: opacity 1.2s ease-in-out;
             border: 6px solid #cf7f3a;
+            opacity: 1;
         }
 
-        /* 装饰挂笺效果 (简化) */
+        .card.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+
         .card::after {
             content: '🐉 福 🐉';
             position: absolute;
@@ -59,13 +64,10 @@
             font-size: 2.2rem;
             opacity: 0.1;
             color: #b33e3e;
-            font-weight: bold;
             transform: rotate(-5deg);
             pointer-events: none;
-            font-family: 'KaiTi', '楷体', serif;
         }
 
-        /* 标题区 */
         .title {
             color: #972020;
             font-size: clamp(2rem, 8vw, 3.5rem);
@@ -73,7 +75,6 @@
             letter-spacing: 6px;
             text-shadow: 2px 2px 0 #f9d77e, 4px 4px 0 rgba(180, 60, 20, 0.3);
             margin-bottom: 6px;
-            text-transform: uppercase;
         }
 
         .sub-title {
@@ -99,10 +100,8 @@
             margin: 10px 0 20px;
             border: 1px dashed #c75e2b;
             font-weight: 500;
-            letter-spacing: 1px;
         }
 
-        /* 倒计时面板 */
         .countdown-panel {
             display: flex;
             flex-wrap: wrap;
@@ -112,7 +111,7 @@
         }
 
         .time-block {
-            background: #9f2d2d;        /* 深红底 */
+            background: #9f2d2d;
             background: linear-gradient(145deg, #b33b3b, #831e1e);
             border-radius: 32px;
             padding: 20px 12px 16px;
@@ -121,10 +120,6 @@
             box-shadow: 0 12px 0 #521212, 0 8px 15px #3d0f0f;
             border: 2px solid #fec169;
             transition: transform 0.1s ease;
-        }
-
-        .time-block:hover {
-            transform: translateY(-4px);
         }
 
         .time-number {
@@ -150,7 +145,6 @@
             box-shadow: inset 0 -2px 0 #64200e;
         }
 
-        /* 祝福语区域 / 动态状态 */
         .greeting-box {
             background: #ea9e48;
             background: linear-gradient(135deg, #f6b44a, #e8872b);
@@ -173,10 +167,8 @@
             font-size: 1.2rem;
             color: #582b0b;
             margin-top: 6px;
-            font-style: italic;
         }
 
-        /* 脚注 */
         .footer-note {
             margin-top: 30px;
             color: #b1572c;
@@ -197,81 +189,127 @@
             border: 1px solid #d48b47;
         }
 
-        /* 移动端微调 */
-        @media (max-width: 500px) {
-            .card {
-                padding: 1.8rem 1rem;
-                border-radius: 32px;
-            }
-            .time-block {
-                min-width: 70px;
-                padding: 15px 5px 10px;
-            }
-            .time-number {
-                font-size: 2.8rem;
-            }
-            .time-label {
-                font-size: 1rem;
-                padding: 4px 8px;
-            }
-            .greeting-text {
-                font-size: 1.6rem;
-            }
+        /* ----- 烟花全屏覆盖层 (黑色背景，平滑过渡) ----- */
+        .fireworks-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 1.5s ease-in-out;
+            pointer-events: none;           /* 初始无法点击，淡入后允许点击画布 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        /* 数字等宽 */
+        .fireworks-overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        #fireworksCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .new-year-text {
+            position: relative;
+            z-index: 200;
+            color: #FFD966;
+            font-size: clamp(3rem, 15vw, 8rem);
+            font-weight: 900;
+            text-shadow: 0 0 20px #ffaa33, 0 0 40px #ff5500;
+            font-family: 'KaiTi', '楷体', '华文楷体', serif;
+            letter-spacing: 12px;
+            transform: scale(0.9);
+            animation: glowPulse 2s infinite alternate;
+            opacity: 0;
+            transition: opacity 1s ease;
+            pointer-events: none;    /* 让点击穿透到canvas，用于解锁声音 */
+        }
+
+        .new-year-text.show {
+            opacity: 1;
+        }
+
+        @keyframes glowPulse {
+            from { text-shadow: 0 0 20px #ff9900, 0 0 40px #ff3300; }
+            to { text-shadow: 0 0 30px #ffcc66, 0 0 70px #ff6633; }
+        }
+
+        /* 提示用户点击解锁声音 (只在未解锁时显示) */
+        .sound-tip {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 300;
+            color: rgba(255,255,200,0.8);
+            background: rgba(0,0,0,0.6);
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-size: 1.2rem;
+            border: 1px solid #ffb347;
+            backdrop-filter: blur(4px);
+            pointer-events: none;
+            transition: opacity 0.5s;
+            opacity: 0;
+        }
+
+        .sound-tip.show {
+            opacity: 1;
+        }
+
         .mono {
-            font-family: 'Courier New', 'JetBrains Mono', monospace;
+            font-family: 'Courier New', monospace;
         }
     </style>
 </head>
 <body>
-    <div class="card">
+    <!-- 倒计时卡片 -->
+    <div class="card" id="countdownCard">
         <h1 class="title">🐎 丙午新春 🐎</h1>
         <div class="sub-title">2026 · 春节倒计时</div>
-        <div class="gregorian-date">
-            <span>🏮 2月17日 星期二 🏮</span>
-        </div>
+        <div class="gregorian-date"><span>🏮 2月17日 星期二 🏮</span></div>
 
-        <!-- 倒计时数字块 -->
         <div class="countdown-panel">
-            <div class="time-block">
-                <div class="time-number mono" id="days">00</div>
-                <div class="time-label">天</div>
-            </div>
-            <div class="time-block">
-                <div class="time-number mono" id="hours">00</div>
-                <div class="time-label">时</div>
-            </div>
-            <div class="time-block">
-                <div class="time-number mono" id="minutes">00</div>
-                <div class="time-label">分</div>
-            </div>
-            <div class="time-block">
-                <div class="time-number mono" id="seconds">00</div>
-                <div class="time-label">秒</div>
-            </div>
+            <div class="time-block"><div class="time-number mono" id="days">00</div><div class="time-label">天</div></div>
+            <div class="time-block"><div class="time-number mono" id="hours">00</div><div class="time-label">时</div></div>
+            <div class="time-block"><div class="time-number mono" id="minutes">00</div><div class="time-label">分</div></div>
+            <div class="time-block"><div class="time-number mono" id="seconds">00</div><div class="time-label">秒</div></div>
         </div>
 
-        <!-- 动态提示语 (会根据是否过期变化) -->
         <div class="greeting-box" id="greetingBox">
             <div class="greeting-text" id="mainGreeting">🧧 距离春节还有</div>
             <div class="sub-greeting" id="subGreeting">迎马年 · 纳福运</div>
         </div>
 
-        <!-- 底部农历/时间说明 -->
         <div class="footer-note">
             <span>📅 农历丙午年 正月初一</span>
             <span>⏱️ 北京时间 / 东八区</span>
         </div>
     </div>
 
+    <!-- 烟花覆盖层 (黑色背景 + canvas + 新年快乐文字 + 声音提示) -->
+    <div class="fireworks-overlay" id="fireworksOverlay">
+        <canvas id="fireworksCanvas"></canvas>
+        <div class="new-year-text" id="newYearText">新年快乐</div>
+        <div class="sound-tip" id="soundTip">🔊 点击画面 开启音效</div>
+    </div>
+
     <script>
         (function() {
-            // ---------- 设定目标：2026年春节（北京时间 2026-02-17 00:00:00）----------
-            const TARGET_DATE = new Date("2026-02-17T00:00:00+08:00");  // 直接指定东八区
-
-            // 获取DOM元素
+            // ---------- 原有倒计时逻辑 (改造：结束时触发烟花) ----------
+            const TARGET_DATE = new Date(); // 先获取当前时间
+            TARGET_DATE.setSeconds(TARGET_DATE.getSeconds() + 5); // 加5秒
             const daysEl = document.getElementById('days');
             const hoursEl = document.getElementById('hours');
             const minutesEl = document.getElementById('minutes');
@@ -279,90 +317,326 @@
             const mainGreeting = document.getElementById('mainGreeting');
             const subGreeting = document.getElementById('subGreeting');
             const greetingBox = document.getElementById('greetingBox');
+            const countdownCard = document.getElementById('countdownCard');
+            const overlay = document.getElementById('fireworksOverlay');
+            const newYearText = document.getElementById('newYearText');
+            const soundTip = document.getElementById('soundTip');
 
-            // 定时器ID
             let timer = null;
+            let fireworksTriggered = false;   // 防止重复触发烟花
 
-            // 辅助函数：补零至两位
             function pad(num) {
                 return String(num).padStart(2, '0');
             }
 
-            // 核心更新函数：计算剩余时间，更新UI，返回是否继续（true=未过期）
+            // 倒计时更新函数 (与原逻辑一致，但检测到时间≤0时触发烟花)
             function updateCountdown() {
-                const now = new Date();                      // 当前UTC时间（自动转换）
-                const diffMs = TARGET_DATE - now;            // 毫秒差（基于UTC时间戳，精确）
-                
-                // 情况1：已经到达或超过春节 (diff <= 0)
+                const now = new Date();
+                const diffMs = TARGET_DATE - now;
+
                 if (diffMs <= 0) {
-                    // 停止任何正在运行的定时器
+                    // 时间已到，停止定时器，触发烟花（仅一次）
                     if (timer) {
                         clearInterval(timer);
                         timer = null;
                     }
-                    // 显示归零（也可以显示 00 00 00 00）
+                    // 可以先把数字置零，但卡片马上要淡出，可视作可选
                     daysEl.textContent = '00';
                     hoursEl.textContent = '00';
                     minutesEl.textContent = '00';
                     secondsEl.textContent = '00';
-                    
-                    // 改变祝福语为“新年快乐”
                     mainGreeting.textContent = '🎉 丙午马年 · 新春快乐 🎉';
                     subGreeting.textContent = '万事顺遂 · 平安喜乐';
-                    // 稍微美化背景色，保留节日气氛
-                    greetingBox.style.background = 'linear-gradient(135deg, #fad676, #f7b731)';
-                    return false;   // 已过期，不再继续
+                    
+                    // 触发烟花过渡 (如果还未触发)
+                    if (!fireworksTriggered) {
+                        fireworksTriggered = true;
+                        startFireworksTransition();
+                    }
+                    return false;
                 }
 
-                // 情况2：尚未过年 —— 计算天、时、分、秒
+                // 正常倒计时计算
                 const totalSeconds = Math.floor(diffMs / 1000);
                 const days = Math.floor(totalSeconds / 86400);
-                const remainingAfterDays = totalSeconds % 86400;
-                const hours = Math.floor(remainingAfterDays / 3600);
-                const remainingAfterHours = remainingAfterDays % 3600;
-                const minutes = Math.floor(remainingAfterHours / 60);
-                const seconds = remainingAfterHours % 60;
+                const remaining = totalSeconds % 86400;
+                const hours = Math.floor(remaining / 3600);
+                const minutes = Math.floor((remaining % 3600) / 60);
+                const seconds = remaining % 60;
 
-                // 更新显示 (补零)
                 daysEl.textContent = pad(days);
                 hoursEl.textContent = pad(hours);
                 minutesEl.textContent = pad(minutes);
                 secondsEl.textContent = pad(seconds);
 
-                // 保证祝福语为“距离春节还有” (万一之前被修改过)
                 mainGreeting.textContent = '🧧 距离春节还有';
                 subGreeting.textContent = '迎马年 · 纳福运';
-                greetingBox.style.background = 'linear-gradient(135deg, #f6b44a, #e8872b)'; // 恢复默认
-                
-                return true;    // 未过期，继续
+                return true;
             }
 
-            // ---------- 初始化 ----------
-            // 先执行一次确保界面正确
-            const stillActive = updateCountdown();
+            // ---------- 烟花 & 声音系统 ----------
+            let canvas = document.getElementById('fireworksCanvas');
+            let ctx = canvas.getContext('2d');
+            let animFrame = null;
+            let particles = [];
+            let rising = null;                // 上升的烟花 {x, y, vy, targetY, exploded}
+            let explosionOccurred = false;     // 标记是否已爆炸(用于显示文字)
+            let textTimer = null;               // 延迟显示新年快乐的定时器
 
-            // 如果还未过年，启动每秒定时器；否则已经停止（update里已清timer）
+            // 音频相关 (使用Web Audio API，需用户手势解锁)
+            let audioCtx = null;
+            let audioUnlocked = false;          // 是否已解锁（用户点击过画布）
+            let pendingExplosionSound = false;   // 如果有爆炸需要播放但未解锁，可暂存
+
+            // 初始化画布大小
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resizeCanvas);
+
+            // 解锁音频：在用户第一次点击画布时调用
+            function initAudio() {
+                if (audioUnlocked) return true;
+                try {
+                    // 创建上下文，它一开始是suspended
+                    if (!audioCtx) {
+                        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    }
+                    // 唤醒上下文
+                    if (audioCtx.state === 'suspended') {
+                        audioCtx.resume().then(() => {
+                            audioUnlocked = true;
+                            soundTip.classList.remove('show'); // 隐藏提示
+                            // 如果之前有待播放的爆炸，立即播放一次
+                            if (pendingExplosionSound) {
+                                playExplosionSound();
+                                pendingExplosionSound = false;
+                            }
+                        }).catch(e => console.warn('音频解锁失败', e));
+                    } else {
+                        audioUnlocked = true;
+                        soundTip.classList.remove('show');
+                    }
+                } catch (e) {
+                    console.warn('Web Audio API 不支持', e);
+                    audioUnlocked = false; // 不支持就不强求了
+                }
+                return audioUnlocked;
+            }
+
+            // 播放爆炸声 (短促的白噪声衰减)
+            function playExplosionSound() {
+                if (!audioCtx || audioCtx.state !== 'running') {
+                    // 未解锁，标记待播放并显示提示
+                    pendingExplosionSound = true;
+                    if (!audioUnlocked) soundTip.classList.add('show');
+                    return;
+                }
+
+                try {
+                    const duration = 0.4; // 秒
+                    const sampleRate = audioCtx.sampleRate;
+                    const buffer = audioCtx.createBuffer(1, sampleRate * duration, sampleRate);
+                    const channel = buffer.getChannelData(0);
+                    for (let i = 0; i < buffer.length; i++) {
+                        // 白噪声
+                        channel[i] = Math.random() * 2 - 1;
+                    }
+                    // 创建衰减包络
+                    const gainNode = audioCtx.createGain();
+                    gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                    
+                    const source = audioCtx.createBufferSource();
+                    source.buffer = buffer;
+                    source.connect(gainNode);
+                    gainNode.connect(audioCtx.destination);
+                    source.start();
+                } catch (e) {
+                    console.warn('播放爆炸声失败', e);
+                }
+            }
+
+            // 创建爆炸粒子 (在指定坐标)
+            function createExplosion(centerX, centerY) {
+                const count = 80;
+                for (let i = 0; i < count; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = 2 + Math.random() * 5;
+                    const vx = Math.cos(angle) * speed;
+                    const vy = Math.sin(angle) * speed - 1.5; // 轻微上升倾向
+                    const color = `hsl(${Math.random() * 60 + 20}, 100%, 65%)`; // 暖色
+                    particles.push({
+                        x: centerX,
+                        y: centerY,
+                        vx: vx,
+                        vy: vy,
+                        size: 4 + Math.random() * 6,
+                        alpha: 1.0,
+                        color: color,
+                        life: 1.0,
+                        decay: 0.01 + Math.random() * 0.02
+                    });
+                }
+                // 标记已爆炸，并启动定时器显示新年快乐 (延迟0.8秒，等粒子绽放)
+                if (!explosionOccurred) {
+                    explosionOccurred = true;
+                    if (textTimer) clearTimeout(textTimer);
+                    textTimer = setTimeout(() => {
+                        newYearText.classList.add('show');
+                    }, 800);
+                }
+                // 同时播放爆炸声
+                playExplosionSound();
+            }
+
+            // 重置烟花状态 (准备新的一发)
+            function launchFirework() {
+                // 隐藏文字
+                newYearText.classList.remove('show');
+                // 清空现有粒子
+                particles = [];
+                // 随机起始x
+                const startX = 100 + Math.random() * (canvas.width - 200);
+                const startY = canvas.height - 30;
+                const targetY = canvas.height * 0.3 + Math.random() * canvas.height * 0.2;
+                rising = {
+                    x: startX,
+                    y: startY,
+                    vy: -6 - Math.random() * 3,   // 上升速度
+                    targetY: targetY,
+                    exploded: false
+                };
+                explosionOccurred = false; // 新烟花未爆炸
+                if (textTimer) clearTimeout(textTimer);
+            }
+
+            // 动画更新
+            function updateFireworks() {
+                if (!ctx) return;
+
+                // 清空画布 (黑色背景)
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // 处理上升烟花
+                if (rising && !rising.exploded) {
+                    // 移动
+                    rising.y += rising.vy;
+                    // 轻微空气阻力或不变
+                    if (rising.y <= rising.targetY) {
+                        // 到达目标，爆炸
+                        createExplosion(rising.x, rising.y);
+                        rising.exploded = true;
+                        rising = null;
+                    } else {
+                        // 绘制上升弹头 (白色/金色亮点)
+                        ctx.beginPath();
+                        ctx.arc(rising.x, rising.y, 8, 0, Math.PI * 2);
+                        ctx.fillStyle = '#FFE55C';
+                        ctx.shadowColor = '#FFA500';
+                        ctx.shadowBlur = 15;
+                        ctx.fill();
+                        ctx.shadowBlur = 0; // 重置阴影避免影响粒子
+                    }
+                }
+
+                // 更新并绘制粒子
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    const p = particles[i];
+                    // 物理更新
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vy += 0.1; // 重力
+                    p.alpha -= p.decay;
+                    p.life -= p.decay;
+
+                    if (p.alpha <= 0.02 || p.y > canvas.height + 50) {
+                        particles.splice(i, 1);
+                        continue;
+                    }
+
+                    // 绘制粒子
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+                    ctx.fillStyle = p.color;
+                    ctx.globalAlpha = p.alpha;
+                    ctx.shadowColor = '#FFB347';
+                    ctx.shadowBlur = 10;
+                    ctx.fill();
+                }
+
+                // 重置透明度、阴影
+                ctx.globalAlpha = 1.0;
+                ctx.shadowBlur = 0;
+
+                // 如果烟花已爆炸且粒子极少，可再自动发射新烟花？(可选) 为了效果，可再补一发，但需求只需“升起并炸开”，然后显示文字。我们保持简单，如果粒子很少且rising为空，可延迟再射一发(增添气氛)
+                if (!rising && particles.length === 0 && explosionOccurred) {
+                    // 可以重新发射，但文字已经显示，可保留。也可以不再发射，保持静谧。
+                    // 但为了让用户点击时有反馈，我们在点击时发射新烟花。下面处理canvas点击事件。
+                }
+
+                animFrame = requestAnimationFrame(updateFireworks);
+            }
+
+            // 启动烟花过渡
+            function startFireworksTransition() {
+                // 1. 卡片淡出
+                countdownCard.classList.add('fade-out');
+                // 2. 显示黑色覆盖层
+                overlay.classList.add('show');
+                // 3. 调整画布尺寸并开始动画
+                resizeCanvas();
+                if (animFrame) cancelAnimationFrame(animFrame);
+                animFrame = requestAnimationFrame(updateFireworks);
+                
+                // 4. 延迟一小下下，发射第一枚烟花 (等黑色完全显现)
+                setTimeout(() => {
+                    launchFirework();
+                }, 400);
+
+                // 5. 声音提示显示 (初始显示，音频解锁后消失)
+                if (!audioUnlocked) {
+                    soundTip.classList.add('show');
+                }
+
+                // 6. 绑定画布点击事件，用于解锁音频 & 发射新烟花
+                canvas.addEventListener('click', function canvasClickHandler() {
+                    // 解锁音频 (如果还未解锁)
+                    if (!audioUnlocked) {
+                        initAudio();  // 内部会resume并隐藏提示
+                    } else {
+                        // 已解锁，每次点击可以燃放一个新烟花，并播放爆炸声 (隐藏旧文字，发射)
+                        launchFirework();
+                        playExplosionSound();  // 立即播放爆炸 (但launchFirework里爆炸时才播放, 这里需要等爆炸时自然播放)
+                        // 但launchFirework里爆炸会调用playExplosionSound，所以不用额外调用
+                        // 但为了让点击就响，也可以立刻播放一个小的？就按爆炸逻辑吧。
+                    }
+                });
+
+                // 7. 可选：为了防止canvas遮罩卡点击，提示可点击
+            }
+
+            // ---------- 启动倒计时 ----------
+            const stillActive = updateCountdown();
             if (stillActive) {
-                // 先确保没有之前的定时器（防御）
                 if (timer) clearInterval(timer);
                 timer = setInterval(updateCountdown, 1000);
             }
 
-            // 可选：当页面隐藏时，浏览器可能会降低定时器精度，但无伤大雅
-            // 为了完美，在页面卸载时清除定时器（好习惯）
             window.addEventListener('beforeunload', function() {
-                if (timer) {
-                    clearInterval(timer);
-                    timer = null;
-                }
+                if (timer) clearInterval(timer);
+                if (animFrame) cancelAnimationFrame(animFrame);
             });
 
-            // 处理极端情况：如果用户设备时间被修改，导致倒计时偏差，刷新即可。
-            // 但每次更新都是实时计算，所以基本没问题。
+            // 额外处理：如果加载时就已经过期（比如测试用），触发烟花
+            if (new Date() >= TARGET_DATE && !fireworksTriggered) {
+                fireworksTriggered = true;
+                startFireworksTransition();
+            }
         })();
     </script>
-
-    <!-- 简要说明：本倒计时基于北京时间 (东八区) 2026年2月17日 00:00:00 -->
-    <!-- 使用纯HTML/CSS/JS，无外部依赖，适配移动端/桌面 -->
 </body>
 </html>
