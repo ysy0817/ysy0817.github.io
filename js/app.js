@@ -1,7 +1,7 @@
 /**
  * 云相册 · 主应用逻辑
  */
-import { Storage, Auth } from './storage.js';
+import { Storage, Auth, onAuthExpired, ERROR_TYPES } from './storage.js';
 
 // =====================================================
 // 应用状态
@@ -114,7 +114,39 @@ function toast(msg, type = '') {
     els.toast.className = 'toast show ' + type;
     toastTimer = setTimeout(() => {
         els.toast.className = 'toast ' + type;
-    }, 2600);
+    }, type === 'error' ? 4500 : 2600);
+}
+
+// =====================================================
+// 统一错误处理：根据错误类型做全局响应
+// =====================================================
+let authRedirectTimer = null;
+function handleApiError(error, fallbackMsg = '操作失败') {
+    if (!error) return fallbackMsg;
+
+    // 认证类型错误：全局触发跳转到登录页（只处理一次，避免重复）
+    if (error && error.errorType === ERROR_TYPES.AUTH) {
+        // 延迟跳转，让用户先看到错误提示
+        if (!authRedirectTimer) {
+            authRedirectTimer = setTimeout(() => {
+                authRedirectTimer = null;
+                // 避免重复触发 showAuthOverlay 的循环（init 里已处理过 session）
+                if (!els.authOverlay.classList.contains('active')) {
+                    state.albums = [];
+                    state.photos = [];
+                    state.currentAlbum = null;
+                    els.photoGrid.innerHTML = '';
+                    els.albumGrid.innerHTML = '';
+                    els.logoutBtn.hidden = true;
+                    els.uploadBtn.hidden = true;
+                    els.newAlbumBtn.hidden = true;
+                    els.backBtn.hidden = true;
+                    showAuthOverlay('登录已过期，请重新登录');
+                }
+            }, 1200);
+        }
+    }
+    return error.message || fallbackMsg;
 }
 
 function openModal(modalEl) {
@@ -142,7 +174,7 @@ async function renderAlbums() {
         state.albums = await Storage.listAlbums();
     } catch (e) {
         console.error(e);
-        toast('加载相册失败', 'error');
+        toast(handleApiError(e, '加载相册失败'), 'error');
         state.albums = [];
     }
 
@@ -178,7 +210,7 @@ async function renderPhotos() {
         state.photos = await Storage.listPhotos(state.currentAlbum.id);
     } catch (e) {
         console.error(e);
-        toast('加载照片失败', 'error');
+        toast(handleApiError(e, '加载照片失败'), 'error');
         state.photos = [];
     }
 
@@ -275,7 +307,7 @@ async function saveAlbum() {
         await renderAlbums();
     } catch (e) {
         console.error(e);
-        toast('保存失败：' + e.message, 'error');
+        toast(handleApiError(e, '保存失败'), 'error');
     } finally {
         els.albumSaveBtn.disabled = false;
         els.albumSaveBtn.textContent = '保存';
@@ -296,7 +328,7 @@ function deleteAlbum(albumId) {
                 await renderAlbums();
             } catch (e) {
                 console.error(e);
-                toast('删除失败：' + e.message, 'error');
+                toast(handleApiError(e, '删除失败'), 'error');
             }
         },
     });
@@ -360,7 +392,7 @@ async function confirmUpload() {
         await renderPhotos();
     } catch (e) {
         console.error(e);
-        toast('上传失败：' + e.message, 'error');
+        toast(handleApiError(e, '上传失败'), 'error');
     } finally {
         els.uploadConfirmBtn.disabled = false;
         els.uploadConfirmBtn.textContent = '上传';
@@ -409,7 +441,7 @@ async function saveNoteIfNeeded() {
         // 仅在切换时提示，避免频繁打扰
     } catch (e) {
         console.error(e);
-        toast('备注保存失败', 'error');
+        toast(handleApiError(e, '备注保存失败'), 'error');
     }
 }
 
@@ -442,7 +474,7 @@ function deleteCurrentPhoto() {
                 toast('照片已删除', 'success');
             } catch (e) {
                 console.error(e);
-                toast('删除失败：' + e.message, 'error');
+                toast(handleApiError(e, '删除失败'), 'error');
             }
         },
     });
@@ -656,22 +688,22 @@ async function handleLogout() {
         onOk: async () => {
             try {
                 await Auth.signOut();
-                // 重置应用状态
-                state.albums = [];
-                state.photos = [];
-                state.currentAlbum = null;
-                els.photoGrid.innerHTML = '';
-                els.albumGrid.innerHTML = '';
-                els.logoutBtn.hidden = true;
-                els.uploadBtn.hidden = true;
-                els.newAlbumBtn.hidden = true;
-                els.backBtn.hidden = true;
-                showAuthOverlay();
-                toast('已退出登录');
             } catch (e) {
                 console.error(e);
-                toast('退出失败', 'error');
+                // signOut 内部已做容错，这里即使失败也强制本地清理
             }
+            // 无论后端是否成功，都强制重置本地状态并回到登录页
+            state.albums = [];
+            state.photos = [];
+            state.currentAlbum = null;
+            els.photoGrid.innerHTML = '';
+            els.albumGrid.innerHTML = '';
+            els.logoutBtn.hidden = true;
+            els.uploadBtn.hidden = true;
+            els.newAlbumBtn.hidden = true;
+            els.backBtn.hidden = true;
+            showAuthOverlay();
+            toast('已退出登录');
         },
     });
 }
@@ -688,6 +720,28 @@ async function showApp() {
 async function init() {
     bindEvents();
 
+    // 注册：认证过期全局监听器（TOKEN 被踢 / 过期 / 被登出时自动跳转登录）
+    onAuthExpired(() => {
+        console.warn('[App] 收到认证过期通知，准备跳转登录页');
+        if (!authRedirectTimer) {
+            authRedirectTimer = setTimeout(() => {
+                authRedirectTimer = null;
+                if (!els.authOverlay.classList.contains('active')) {
+                    state.albums = [];
+                    state.photos = [];
+                    state.currentAlbum = null;
+                    els.photoGrid.innerHTML = '';
+                    els.albumGrid.innerHTML = '';
+                    els.logoutBtn.hidden = true;
+                    els.uploadBtn.hidden = true;
+                    els.newAlbumBtn.hidden = true;
+                    els.backBtn.hidden = true;
+                    showAuthOverlay('登录已过期，请重新登录');
+                }
+            }, 800);
+        }
+    });
+
     // 检查登录状态
     els.authOverlay.classList.remove('hidden');
     try {
@@ -700,6 +754,7 @@ async function init() {
         }
     } catch (e) {
         console.warn('Session check failed:', e);
+        // 会话检查失败不直接报错，让用户手动登录即可
     }
     // 未登录，显示密码层
     showAuthOverlay();
