@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>云相册 · Cloud Album</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+</head>
+<body>
+    <!-- 动态渐变背景 -->
+    <div class="bg-gradient">
+        <div class="bg-blob blob-1"></div>
+        <div class="bg-blob blob-2"></div>
+        <div class="bg-blob blob-3"></div>
+    </div>
+
+    <!-- 密码验证层 -->
+    <div class="auth-overlay" id="authOverlay">
+        <div class="auth-box glass">
+            <div class="auth-icon">🔒</div>
+            <h2 class="auth-title">访问相册</h2>
+            <p class="auth-hint">请输入访问密码</p>
+            <input type="password" class="auth-input" id="authInput" placeholder="密码" autocomplete="current-password" autofocus>
+            <button class="btn-primary auth-submit" id="authSubmit" disabled>进入</button>
+            <p class="auth-error" id="authError"></p>
+            <p class="auth-loading" id="authLoading"><span class="loading-spinner"></span> 正在连接云端...</p>
+        </div>
+    </div>
+
+    <!-- 顶部导航栏 -->
+    <header class="navbar glass">
+        <div class="nav-left">
+            <button class="icon-btn" id="backBtn" title="返回" hidden>
+                <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M15.5 19l-7-7 7-7 1.4 1.4L10.3 12l6.6 6.6z"/></svg>
+            </button>
+            <h1 class="nav-title">
+                <span class="brand-icon">⊹</span>
+                <span id="viewTitle">我的相册</span>
+            </h1>
+        </div>
+        <div class="nav-right">
+            <button class="icon-btn" id="newAlbumBtn" title="新建相册">
+                <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-2 11h-3v3h-2v-3H9v-2h3V9h2v3h3v2z"/></svg>
+            </button>
+            <button class="icon-btn" id="uploadBtn" title="上传照片" hidden>
+                <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M12 2l4 4h-3v7h-2V6H8l4-4zM5 18h14v2H5v-2z"/></svg>
+            </button>
+            <button class="icon-btn" id="logoutBtn" title="退出登录" hidden>
+                <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M17 7l-1.4 1.4L18.2 11H8v2h10.2l-2.6 2.6L17 17l5-5-5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- 主内容区 -->
+    <main class="main-content">
+        <!-- 相册列表视图 -->
+        <section class="view" id="albumsView">
+            <div class="view-header">
+                <h2 class="view-subtitle">所有相册</h2>
+                <span class="view-count" id="albumCount">0 个相册</span>
+            </div>
+            <div class="album-grid" id="albumGrid"></div>
+            <div class="empty-state" id="albumsEmpty" hidden>
+                <div class="empty-icon">📷</div>
+                <p>还没有相册</p>
+                <button class="btn-primary" onclick="document.getElementById('newAlbumBtn').click()">创建第一个相册</button>
+            </div>
+        </section>
+
+        <!-- 照片网格视图 -->
+        <section class="view" id="photosView" hidden>
+            <div class="view-header">
+                <h2 class="view-subtitle" id="currentAlbumName">相册</h2>
+                <span class="view-count" id="photoCount">0 张照片</span>
+            </div>
+            <div class="photo-grid" id="photoGrid"></div>
+            <div class="empty-state" id="photosEmpty" hidden>
+                <div class="empty-icon">🖼️</div>
+                <p>相册空空如也</p>
+                <button class="btn-primary" onclick="document.getElementById('uploadBtn').click()">上传第一张照片</button>
+            </div>
+        </section>
+    </main>
+
+    <!-- 全屏照片查看器 -->
+    <div class="lightbox" id="lightbox">
+        <button class="lightbox-close" id="lightboxClose">×</button>
+        <button class="lightbox-nav lightbox-prev" id="lightboxPrev">‹</button>
+        <button class="lightbox-nav lightbox-next" id="lightboxNext">›</button>
+        <div class="lightbox-content">
+            <img class="lightbox-img" id="lightboxImg" alt="">
+            <div class="lightbox-info glass">
+                <textarea class="note-editor" id="noteEditor" placeholder="为这张照片添加备注..."></textarea>
+                <div class="lightbox-meta">
+                    <span id="photoMeta"></span>
+                    <button class="btn-text" id="deletePhotoBtn">删除照片</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新建/编辑相册 模态框 -->
+    <div class="modal-overlay" id="albumModal">
+        <div class="modal glass">
+            <h3 class="modal-title" id="albumModalTitle">新建相册</h3>
+            <label class="field-label">相册名称</label>
+            <input type="text" class="text-input" id="albumNameInput" placeholder="例如：2026 春节旅行" maxlength="50">
+            <label class="field-label">相册描述（可选）</label>
+            <textarea class="text-input textarea" id="albumDescInput" placeholder="简短描述这个相册..." maxlength="200"></textarea>
+            <div class="modal-actions">
+                <button class="btn-ghost" id="albumCancelBtn">取消</button>
+                <button class="btn-primary" id="albumSaveBtn">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 上传照片 模态框 -->
+    <div class="modal-overlay" id="uploadModal">
+        <div class="modal glass">
+            <h3 class="modal-title">上传照片</h3>
+            <div class="upload-zone" id="uploadZone">
+                <div class="upload-icon">📤</div>
+                <p class="upload-text">点击选择 或 拖拽照片到此</p>
+                <p class="upload-hint">支持 JPG / PNG / WebP / GIF，单张不超过 20MB</p>
+                <input type="file" id="fileInput" accept="image/*" multiple hidden>
+            </div>
+            <div class="upload-preview" id="uploadPreview"></div>
+            <div class="modal-actions">
+                <button class="btn-ghost" id="uploadCancelBtn">取消</button>
+                <button class="btn-primary" id="uploadConfirmBtn" disabled>上传</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 确认对话框 -->
+    <div class="modal-overlay" id="confirmModal">
+        <div class="modal glass modal-small">
+            <h3 class="modal-title" id="confirmTitle">确认操作</h3>
+            <p class="confirm-text" id="confirmText"></p>
+            <div class="modal-actions">
+                <button class="btn-ghost" id="confirmCancelBtn">取消</button>
+                <button class="btn-danger" id="confirmOkBtn">确认</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast 提示 -->
+    <div class="toast" id="toast"></div>
+
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
