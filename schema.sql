@@ -30,8 +30,21 @@ create table if not exists photos (
     size bigint,
     note text default '',
     storage_path text not null,
+    motion_video_path text default null,  -- 动态照片内嵌视频的存储路径（Android Motion Photo 自动提取）
     created_at timestamptz default now()
 );
+
+-- 已有库升级：若 photos 表已存在但缺少 motion_video_path 列，执行下方语句安全补列
+-- （重复执行不会报错）
+do $$
+begin
+    if not exists (
+        select 1 from information_schema.columns
+        where table_name = 'photos' and column_name = 'motion_video_path'
+    ) then
+        alter table photos add column motion_video_path text default null;
+    end if;
+end $$;
 
 create index if not exists idx_photos_album_id on photos(album_id);
 create index if not exists idx_photos_created_at on photos(created_at desc);

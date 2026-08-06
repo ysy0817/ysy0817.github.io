@@ -350,6 +350,20 @@ html, body {
     border: 1px solid rgba(255, 235, 59, 0.4);
 }
 
+.photo-motion-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    color: #fff;
+    font-size: 0.7rem;
+    padding: 3px 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(124, 131, 255, 0.5);
+    pointer-events: none;
+}
+
 .photo-overlay {
     position: absolute;
     inset: 0;
@@ -654,13 +668,72 @@ html, body {
     gap: 16px;
 }
 
-.lightbox-img {
+.lightbox-media {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.lightbox-img,
+.lightbox-video {
     max-width: 90vw;
     max-height: 70vh;
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-strong);
     object-fit: contain;
 }
+
+.lightbox-video[hidden],
+.lightbox-img[hidden] {
+    display: none;
+}
+
+/* 动态照片标识（灯箱左上角） */
+.motion-badge {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    color: #fff;
+    font-size: 0.75rem;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    letter-spacing: 0.5px;
+    pointer-events: none;
+}
+
+.motion-badge[hidden] { display: none; }
+
+/* 动态照片播放/暂停按钮（灯箱右下角） */
+.motion-toggle {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    width: 46px;
+    height: 46px;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #fff;
+    border-radius: 50%;
+    font-size: 16px;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.motion-toggle:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    transform: scale(1.08);
+}
+
+.motion-toggle[hidden] { display: none; }
 
 .lightbox-info {
     width: min(640px, 90vw);

@@ -89,7 +89,12 @@
         <button class="lightbox-nav lightbox-prev" id="lightboxPrev">‹</button>
         <button class="lightbox-nav lightbox-next" id="lightboxNext">›</button>
         <div class="lightbox-content">
-            <img class="lightbox-img" id="lightboxImg" alt="">
+            <div class="lightbox-media">
+                <img class="lightbox-img" id="lightboxImg" alt="">
+                <video class="lightbox-video" id="lightboxVideo" hidden muted loop playsinline></video>
+                <span class="motion-badge" id="motionBadge" hidden>动态</span>
+                <button class="motion-toggle" id="motionToggle" hidden title="播放/暂停动态照片">▶</button>
+            </div>
             <div class="lightbox-info glass">
                 <textarea class="note-editor" id="noteEditor" placeholder="为这张照片添加备注..."></textarea>
                 <div class="lightbox-meta">
@@ -122,7 +127,7 @@
             <div class="upload-zone" id="uploadZone">
                 <div class="upload-icon">📤</div>
                 <p class="upload-text">点击选择 或 拖拽照片到此</p>
-                <p class="upload-hint">支持 JPG / PNG / WebP / GIF，单张不超过 20MB</p>
+                <p class="upload-hint">支持 JPG / PNG / WebP / GIF，单张不超过 20MB（动态照片自动识别）</p>
                 <input type="file" id="fileInput" accept="image/*" multiple hidden>
             </div>
             <div class="upload-preview" id="uploadPreview"></div>
