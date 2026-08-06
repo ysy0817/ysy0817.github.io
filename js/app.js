@@ -70,6 +70,9 @@ const els = {
     // 大图查看器
     lightbox: $('#lightbox'),
     lightboxImg: $('#lightboxImg'),
+    lightboxVideo: $('#lightboxVideo'),
+    motionBadge: $('#motionBadge'),
+    motionToggle: $('#motionToggle'),
     lightboxClose: $('#lightboxClose'),
     lightboxPrev: $('#lightboxPrev'),
     lightboxNext: $('#lightboxNext'),
@@ -185,10 +188,12 @@ async function renderPhotos() {
     els.photoCount.textContent = `${state.photos.length} 张照片`;
     els.photosEmpty.hidden = state.photos.length > 0;
     els.photoGrid.innerHTML = state.photos.map((photo, idx) => {
-        const url = Storage.getPhotoUrl(photo);
+        const url = Storage.getThumbUrl(photo);
+        const isMotion = Storage.isMotionPhoto(photo);
         return `
             <div class="photo-card" data-index="${idx}">
-                ${url ? `<img src="${url}" alt="${escapeHTML(photo.name)}" loading="lazy">` : ''}
+                ${url ? `<img src="${url}" alt="${escapeHTML(photo.name)}" loading="lazy" decoding="async">` : ''}
+                ${isMotion ? `<span class="photo-motion-badge" title="动态照片">▶ 动态</span>` : ''}
                 ${photo.note ? `<div class="photo-note-badge">📝</div>` : ''}
                 ${photo.note ? `
                     <div class="photo-overlay">
@@ -377,6 +382,12 @@ function openLightbox(index) {
 
 function closeLightbox() {
     els.lightbox.classList.remove('active');
+    // 停止动态照片视频
+    if (els.lightboxVideo && !els.lightboxVideo.hidden) {
+        els.lightboxVideo.pause();
+        els.lightboxVideo.removeAttribute('src');
+        els.lightboxVideo.load();
+    }
     // 关闭时自动保存备注
     saveNoteIfNeeded();
     state.lightboxIndex = -1;
@@ -386,12 +397,46 @@ function renderLightbox() {
     const photo = state.photos[state.lightboxIndex];
     if (!photo) return;
     const url = Storage.getPhotoUrl(photo);
+    els.lightboxImg.hidden = false;        // 默认显示静态图（动态视频默认不自动播放）
     els.lightboxImg.src = url || '';
     els.lightboxImg.alt = photo.name;
     els.noteEditor.value = photo.note || '';
     els.photoMeta.textContent = `${escapeHTML(photo.name)} · ${formatSize(photo.size)} · ${formatDate(photo.created_at)}`;
     els.lightboxPrev.style.visibility = state.lightboxIndex > 0 ? 'visible' : 'hidden';
     els.lightboxNext.style.visibility = state.lightboxIndex < state.photos.length - 1 ? 'visible' : 'hidden';
+
+    // 动态照片：展示视频与切换按钮
+    const motionUrl = Storage.getMotionVideoUrl(photo);
+    const isMotion = !!motionUrl;
+    els.motionBadge.hidden = !isMotion;
+    els.motionToggle.hidden = !isMotion;
+    if (isMotion) {
+        els.lightboxVideo.src = motionUrl;
+        els.lightboxVideo.hidden = true;     // 默认显示静态图，点击按钮再播放
+        els.motionToggle.textContent = '▶';
+        els.motionToggle.dataset.playing = '0';
+    } else {
+        els.lightboxVideo.removeAttribute('src');
+        els.lightboxVideo.hidden = true;
+    }
+}
+
+function toggleMotion() {
+    const playing = els.motionToggle.dataset.playing === '1';
+    if (playing) {
+        els.lightboxVideo.pause();
+        els.lightboxVideo.hidden = true;
+        els.lightboxImg.hidden = false;
+        els.motionToggle.textContent = '▶';
+        els.motionToggle.dataset.playing = '0';
+    } else {
+        els.lightboxImg.hidden = true;
+        els.lightboxVideo.hidden = false;
+        els.lightboxVideo.currentTime = 0;
+        els.lightboxVideo.play().catch(() => {});
+        els.motionToggle.textContent = '⏸';
+        els.motionToggle.dataset.playing = '1';
+    }
 }
 
 let lastNoteIdx = -1;
@@ -405,11 +450,39 @@ async function saveNoteIfNeeded() {
     try {
         await Storage.updatePhoto(photo.id, { note: newNote });
         photo.note = newNote;
-        await renderPhotos();
-        // 仅在切换时提示，避免频繁打扰
+        // 仅更新对应卡片的备注徽标，避免重新拉取/渲染整张网格
+        updatePhotoCardNote(state.lightboxIndex, newNote);
     } catch (e) {
         console.error(e);
         toast('备注保存失败', 'error');
+    }
+}
+
+/** 局部更新单张照片卡片的备注显示，避免全量重渲染 */
+function updatePhotoCardNote(idx, note) {
+    const card = els.photoGrid.querySelector(`.photo-card[data-index="${idx}"]`);
+    if (!card) return;
+    let badge = card.querySelector('.photo-note-badge');
+    let overlay = card.querySelector('.photo-overlay');
+    if (note) {
+        if (!badge) {
+            badge = document.createElement('div');
+            badge.className = 'photo-note-badge';
+            card.appendChild(badge);
+        }
+        badge.textContent = '📝';
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.className = 'photo-overlay';
+            const text = document.createElement('div');
+            text.className = 'photo-note-text';
+            overlay.appendChild(text);
+            card.appendChild(overlay);
+        }
+        overlay.querySelector('.photo-note-text').textContent = note;
+    } else {
+        if (badge) badge.remove();
+        if (overlay) overlay.remove();
     }
 }
 
@@ -417,6 +490,11 @@ function navigateLightbox(delta) {
     const next = state.lightboxIndex + delta;
     if (next < 0 || next >= state.photos.length) return;
     saveNoteIfNeeded();
+    // 切换前停止当前动态视频
+    if (els.lightboxVideo && !els.lightboxVideo.hidden) {
+        els.lightboxVideo.pause();
+    }
+    els.lightboxImg.hidden = false;
     state.lightboxIndex = next;
     renderLightbox();
 }
@@ -431,14 +509,24 @@ function deleteCurrentPhoto() {
         onOk: async () => {
             try {
                 await Storage.deletePhoto(photo.id);
-                state.photos.splice(state.lightboxIndex, 1);
+                const removedIdx = state.lightboxIndex;
+                state.photos.splice(removedIdx, 1);
+                // 局部移除卡片，不重新拉取整页
+                const card = els.photoGrid.querySelector(`.photo-card[data-index="${removedIdx}"]`);
+                if (card) card.remove();
+                // 重新编号后续卡片的 data-index
+                els.photoGrid.querySelectorAll('.photo-card').forEach(c => {
+                    const i = parseInt(c.dataset.index, 10);
+                    if (i > removedIdx) c.dataset.index = String(i - 1);
+                });
+                els.photoCount.textContent = `${state.photos.length} 张照片`;
                 if (state.photos.length === 0) {
+                    els.photosEmpty.hidden = false;
                     closeLightbox();
                 } else {
                     state.lightboxIndex = Math.min(state.lightboxIndex, state.photos.length - 1);
                     renderLightbox();
                 }
-                await renderPhotos();
                 toast('照片已删除', 'success');
             } catch (e) {
                 console.error(e);
@@ -546,6 +634,7 @@ function bindEvents() {
     els.lightboxPrev.addEventListener('click', () => navigateLightbox(-1));
     els.lightboxNext.addEventListener('click', () => navigateLightbox(1));
     els.deletePhotoBtn.addEventListener('click', deleteCurrentPhoto);
+    els.motionToggle.addEventListener('click', toggleMotion);
     els.lightbox.addEventListener('click', (e) => {
         if (e.target === els.lightbox) closeLightbox();
     });
